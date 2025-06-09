@@ -1,3 +1,4 @@
+![image](https://github.com/user-attachments/assets/6b39413c-8c8e-4906-85ad-495c98aa6daa)
 # ci-cd-pipeline-project
 CI/CD Pipeline for Scalable Web Application 
 ## Project Tech Stack
