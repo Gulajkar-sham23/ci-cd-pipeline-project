@@ -1,46 +1,33 @@
-groovy
-pipeline {
-    agent any
-    environment {
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-    }
-    stages {
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/user/ci-cd-pipeline-project.git'
-            }
-        }
-        stage('Build') {
-            steps {
-                sh 'docker build -t mywebapp:latest .'
-            }
-        }
-        stage('Unit Test') {
-            steps {
-                sh './scripts/run_tests.sh'
-            }
-        }
-        stage('Upload Artifact to S3') {
-            steps {
-                sh 'aws s3 cp mywebapp:latest s3://my-artifact-bucket/mywebapp:latest'
-            }
-        }
-        stage('Deploy to AWS EC2') {
-            steps {
-                sh 'scp -i key.pem mywebapp:latest ec2-user@EC2_IP:/home/ec2-user/'
-            }
-        }
-        stage('Integration Test') {
-            steps {
-                sh './scripts/run_tests.sh'
-            }
-        }
-    }
-    post {
-        failure {
-            echo 'Build failed. Initiating rollback.'
-            sh './scripts/rollback.sh'
-        }
-    }
+resource "aws_s3_bucket" "artifact_bucket" {
+  bucket = "my-artifact-bucket"
+}
+
+resource "aws_launch_configuration" "app_lc" {
+  name_prefix   = "app-lc-"
+  image_id      = "ami-0abcdef1234567890"
+  instance_type = "t2.micro"
+  key_name      = "your-key-pair"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_autoscaling_group" "app_asg" {
+  desired_capacity     = 2
+  max_size            = 3
+  min_size            = 1
+  launch_configuration = aws_launch_configuration.app_lc.id
+  vpc_zone_identifier = ["subnet-12345678"]
+}
+
+resource "aws_lb" "app_lb" {
+  name               = "app-lb"
+  internal           = false
+  load_balancer_type = "application"
+  subnets            = ["subnet-12345678"]
+}
+
+resource "aws_cloudwatch_log_group" "app_log_group" {
+  name = "/ecs/app-logs"
 }
