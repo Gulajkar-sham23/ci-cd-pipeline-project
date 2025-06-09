@@ -1,2 +1,5 @@
-FROM nginx:alpine
-COPY app/index.html /usr/share/nginx/html/index.html
+FROM python:3.9-slim
+WORKDIR /app
+COPY app/app.py ./
+RUN pip install flask
+CMD ["python", "app.py"]
