@@ -8,3 +8,18 @@ resource "aws_launch_configuration" "app_lc" {
     create_before_destroy = true
   }
 }
+
+resource "aws_autoscaling_group" "app_asg" {
+  desired_capacity     = 2
+  max_size            = 3
+  min_size            = 1
+  launch_configuration = aws_launch_configuration.app_lc.id
+  vpc_zone_identifier = ["subnet-12345678"]
+}
+
+resource "aws_lb" "app_lb" {
+  name               = "app-lb"
+  internal           = false
+  load_balancer_type = "application"
+  subnets            = ["subnet-12345678"]
+}
