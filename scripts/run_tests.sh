@@ -1,2 +1,2 @@
 #!/bin/bash
-curl -f http://localhost || exit 1
+curl -f http://localhost:5000 || exit 1
